@@ -49,7 +49,7 @@ func parseInteger(reader io.ByteReader) int {
 			break
 		}
 
-		number = (number * 10) + int((value - 48))
+		number = (number * 10) + int(value-48)
 	}
 	readByte(reader) // discard '\n'
 	return number * negativeMultipler
@@ -58,7 +58,6 @@ func parseInteger(reader io.ByteReader) int {
 func parseBulkString(reader IOReader) interface{} {
 	length := parseInteger(reader)
 	if length == 0 {
-		readBytes(2, reader)
 		return ""
 	}
 	if length == -1 {
@@ -69,6 +68,7 @@ func parseBulkString(reader IOReader) interface{} {
 	if bytesRead != length {
 		panic(fmt.Sprintf("Read less bytes than required (should have been %d, was %d)", length, readBytes))
 	}
+	readBytes(2, reader) // discard "\r\n"
 	return string(bytes[:bytesRead])
 }
 
@@ -85,7 +85,6 @@ func parseArray(reader IOReader) interface{} {
 	values := make([]interface{}, length)
 	for index := range values {
 		values[index] = Parse(reader)
-		readBytes(2, reader)
 	}
 
 	return values

@@ -43,50 +43,51 @@ var _ = Describe("Parser", func() {
 		Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"))).To(Equal(expected))
 	})
 
-	// it('handles multiple empty arrays', () => {
-	// const buffer = new Buffer('*2\r\n*0\r\n*0\r\n');
-	// const values = parser.parse(buffer);
-	// assert.deepEqual(values, [[],[]]);
-	// });
+	It("handles multiple empty arrays", func() {
+		actual := benchmark.Parse(bytes.NewBufferString("*2\r\n*0\r\n*0\r\n")).([]interface{})
+		var empty []interface{}
+		Expect(actual).To(BeAssignableToTypeOf(empty))
+		Expect(len(actual)).To(Equal(2))
+		Expect(actual[0]).To(Equal(empty))
+		Expect(actual[1]).To(Equal(empty))
+	})
 
-	// it('handles arrays of nil strings', () => {
-	// const buffer = new Buffer('*2\r\n$-1\r\n$-1\r\n');
-	// const values = parser.parse(buffer);
-	// assert.deepEqual(values, [undefined, undefined]);
-	// });
+	It("handles arrays of nil strings", func() {
+		expected := []interface{}{nil, nil}
+		Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n$-1\r\n$-1\r\n"))).To(Equal(expected))
+	})
 
-	// it('handles arrays of empty strings', () => {
-	// const buffer = new Buffer('*2\r\n$0\r\n$0\r\n');
-	// assert.deepEqual(parser.parse(buffer), ['', '']);
-	// });
+	It("handles arrays of empty strings", func() {
+		expected := []interface{}{"", ""}
+		Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n$0\r\n$0\r\n"))).To(Equal(expected))
+	})
 
-	// it('handles arrays of integers', () => {
-	// const buffer = new Buffer('*3\r\n:1\r\n:2\r\n:3\r\n');
-	// assert.deepEqual(parser.parse(buffer), [1, 2, 3]);
-	// });
+	It("handles arrays of integers", func() {
+		expected := []interface{}{1, 2, 3}
+		Expect(benchmark.Parse(bytes.NewBufferString("*3\r\n:1\r\n:2\r\n:3\r\n"))).To(Equal(expected))
+	})
 
-	// it('handles mixed types', () => {
-	// const buffer = new Buffer('*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$6\r\nfoobar\r\n');
-	// assert.deepEqual(parser.parse(buffer), [1, 2, 3, 4, 'foobar']);
-	// });
+	It("handles mixed types", func() {
+		expected := []interface{}{1, 2, 3, 4, "foobar"}
+		Expect(benchmark.Parse(bytes.NewBufferString("*5\r\n:1\r\n:2\r\n:3\r\n:4\r\n$6\r\nfoobar\r\n"))).To(Equal(expected))
+	})
 
-	// it('handles nested arrays', () => {
-	// const buffer = new Buffer('*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*1\r\n+Foo\r\n');
-	// assert.deepEqual(parser.parse(buffer), [[1, 2, 3], ['Foo']]);
-	// });
+	It("handles nested arrays", func() {
+		expected := []interface{}{[]interface{}{1, 2, 3}, []interface{}{"Foo"}}
+		Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*1\r\n+Foo\r\n"))).To(Equal(expected))
+	})
 
-	// it('handles nested arrays with error', () => {
-	// const buffer = new Buffer('*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n');
-	// expect(() => parser.parse(buffer)).to.throw('Bar');
-	// });
+	// It("handles nested arrays with error", func() {
+	// 	expected := []interface{}{[]interface{}{1, 2, 3}, []interface{}{"Foo"}}
+	// 	Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n"))).To(Equal(expected))
+	// })
 
-	// it('handles null arrays', () => {
-	// const buffer = new Buffer('*-1\r\n');
-	// assert.equal(parser.parse(buffer), undefined);
-	// });
+	It("handles null arrays", func() {
+		Expect(benchmark.Parse(bytes.NewBufferString("*-1\r\n"))).To(BeNil())
+	})
 
-	// it('handles nulls in arrays', () => {
-	// const buffer = new Buffer('*3\r\n$3\r\nfoo\r\n$-1\r\n$3\r\nbar\r\n');
-	// assert.deepEqual(parser.parse(buffer), ['foo', undefined, 'bar']);
-	// });
+	It("handles nulls in arrays", func() {
+		expected := []interface{}{"foo", nil, "bar"}
+		Expect(benchmark.Parse(bytes.NewBufferString("*3\r\n$3\r\nfoo\r\n$-1\r\n$3\r\nbar\r\n"))).To(Equal(expected))
+	})
 })
