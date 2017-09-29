@@ -66,10 +66,10 @@ func parseBulkString(reader IOReader) interface{} {
 
 	bytesRead, bytes := readBytes(length, reader)
 	if bytesRead != length {
-		panic(fmt.Sprintf("Read less bytes than required (should have been %d, was %d)", length, readBytes))
+		panic(fmt.Sprintf("Read less bytes than required (should have been %d, was %d)", length, bytesRead))
 	}
 	readBytes(2, reader) // discard "\r\n"
-	return string(bytes[:bytesRead])
+	return string(bytes)
 }
 
 func parseArray(reader IOReader) interface{} {
