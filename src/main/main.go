@@ -23,7 +23,10 @@ func main() {
 
 			for {
 				fmt.Fprintf(conn, "PING\r\n")
-				result := benchmark.Parse(bufio.NewReader(conn))
+				result, err := benchmark.Parse(bufio.NewReader(conn))
+				if err != nil {
+					panic(err)
+				}
 
 				if result != "PONG" {
 					panic(fmt.Sprintf("Result should have been '+PONG' was '%v'", result))

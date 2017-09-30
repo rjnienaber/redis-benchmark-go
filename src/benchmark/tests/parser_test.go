@@ -14,7 +14,8 @@ var _ = Describe("Parser", func() {
 	})
 
 	It("handles errors", func() {
-		Expect(benchmark.Parse(bytes.NewBufferString("-Error message\r\n"))).To(Equal("Error message"))
+		_, err := benchmark.Parse(bytes.NewBufferString("-Error message\r\n"))
+		Expect(err).To(MatchError("Redis: Error message"))
 	})
 
 	It("handles errors", func() {
@@ -44,7 +45,8 @@ var _ = Describe("Parser", func() {
 	})
 
 	It("handles multiple empty arrays", func() {
-		actual := benchmark.Parse(bytes.NewBufferString("*2\r\n*0\r\n*0\r\n")).([]interface{})
+		result, _ := benchmark.Parse(bytes.NewBufferString("*2\r\n*0\r\n*0\r\n"))
+		actual := result.([]interface{})
 		var empty []interface{}
 		Expect(actual).To(BeAssignableToTypeOf(empty))
 		Expect(len(actual)).To(Equal(2))
@@ -77,10 +79,10 @@ var _ = Describe("Parser", func() {
 		Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*1\r\n+Foo\r\n"))).To(Equal(expected))
 	})
 
-	// It("handles nested arrays with error", func() {
-	// 	expected := []interface{}{[]interface{}{1, 2, 3}, []interface{}{"Foo"}}
-	// 	Expect(benchmark.Parse(bytes.NewBufferString("*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n"))).To(Equal(expected))
-	// })
+	It("handles nested arrays with error", func() {
+		_, err := benchmark.Parse(bytes.NewBufferString("*2\r\n*3\r\n:1\r\n:2\r\n:3\r\n*2\r\n+Foo\r\n-Bar\r\n"))
+		Expect(err).To(MatchError("Redis: Bar"))
+	})
 
 	It("handles null arrays", func() {
 		Expect(benchmark.Parse(bytes.NewBufferString("*-1\r\n"))).To(BeNil())
