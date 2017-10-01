@@ -36,7 +36,7 @@ func main() {
 				}
 
 				if result != "PONG" {
-					panic(fmt.Sprintf("Result should have been '+PONG' was '%v'", result))
+					panic(fmt.Sprintf("Result should have been 'PONG' was '%v'", result))
 				}
 
 				if atomic.LoadUint64(&counter) == limit {
@@ -49,10 +49,20 @@ func main() {
 		wg.Add(1)
 	}
 
+	ticker := time.NewTicker(time.Millisecond * 250)
+	go func() {
+		for _ = range ticker.C {
+			fmt.Printf("\rPING: %0.2f", benchmark.ShowThroughput(start, counter))
+		}
+	}()
+
 	wg.Wait()
+	ticker.Stop()
+	fmt.Printf("\r%-100v\r", "")
 	elapsed := time.Since(start)
-	fmt.Println("time taken:", elapsed)
+	fmt.Printf("time taken: %0.2fs\n", elapsed.Seconds())
 	fmt.Println("counter:", counter)
+	fmt.Printf("requests/sec: %0.2f\n", benchmark.ShowThroughput(start, counter))
 }
 
 // $ redis-benchmark
