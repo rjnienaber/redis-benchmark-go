@@ -5,18 +5,25 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
 func main() {
+	var options = benchmark.ProcessArguments()
+	if options.ShowHelp {
+		fmt.Println(options.HelpText)
+		os.Exit(1)
+	}
 	var wg sync.WaitGroup
 	start := time.Now()
 	var counter uint64
-	for i := 0; i < 50; i++ {
+	var limit uint64 = uint64(options.Requests)
+	for i := 0; i < options.Connections; i++ {
 		go func() {
-			conn, err := net.Dial("tcp", "localhost:6379")
+			conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", options.Host, options.Port))
 			if err != nil {
 				panic(fmt.Sprintf("Couldn't connect to redis server: %v", err))
 			}
@@ -32,7 +39,7 @@ func main() {
 					panic(fmt.Sprintf("Result should have been '+PONG' was '%v'", result))
 				}
 
-				if atomic.LoadUint64(&counter) == 100000 {
+				if atomic.LoadUint64(&counter) == limit {
 					wg.Done()
 					break
 				}
