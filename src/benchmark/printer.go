@@ -7,12 +7,8 @@ import (
 	"time"
 )
 
-type Results struct {
-	Command       string
-	Requests      int
-	Elapsed       time.Duration
-	Connections   int
-	ResponseTimes map[int]int
+func clearLine() {
+	fmt.Printf("\r%-100v\r", "") // clear last line
 }
 
 // PrintThroughput prints the realtime throughput of the benchmark
@@ -24,6 +20,7 @@ func PrintThroughput(start time.Time, counter *uint64) chan bool {
 			select {
 			case <-ticker.C:
 				throughput := float64(*counter) / time.Since(start).Seconds()
+				clearLine()
 				fmt.Printf("\rPING: %0.2f", throughput)
 			case <-stop:
 				ticker.Stop()
@@ -35,8 +32,8 @@ func PrintThroughput(start time.Time, counter *uint64) chan bool {
 }
 
 // PrintResults prints the final results for benchmark
-func PrintResults(results Results) {
-	fmt.Printf("\r%-100v\r", "") // clear last line
+func PrintResults(results *Results) {
+	clearLine()
 	fmt.Printf("====== %s ======\n", results.Command)
 	fmt.Printf("  %d requests completed in %0.2f seconds\n", results.Requests, results.Elapsed.Seconds())
 	fmt.Printf("  %v concurrent clients\n", results.Connections)

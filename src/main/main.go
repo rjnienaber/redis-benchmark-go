@@ -11,30 +11,17 @@ import (
 	"time"
 )
 
-type BenchmarkRun struct {
-	Start time.Time
-	End   time.Time
-}
-
 func main() {
 	var options = benchmark.ProcessArguments()
 	if options.ShowHelp {
 		fmt.Println(options.HelpText)
 		os.Exit(1)
 	}
-	var wg sync.WaitGroup
 	var benchmarkWg sync.WaitGroup
-	start := time.Now()
 	var counter uint64
 	var limit uint64 = uint64(options.Requests)
-	results := make(chan BenchmarkRun)
-	benchmarkResults := benchmark.Results{
-		Command:     "PING",
-		Requests:    options.Requests,
-		Connections: options.Connections,
-	}
-	benchmarkResults.ResponseTimes = make(map[int]int)
 
+	results := benchmark.NewResults(options)
 	for i := 0; i < options.Connections; i++ {
 		benchmarkWg.Add(1)
 		go func() {
@@ -49,10 +36,11 @@ func main() {
 					break
 				}
 
-				runStart := time.Now()
+				start := time.Now()
 				fmt.Fprintf(conn, "PING\r\n")
 				result, err := benchmark.Parse(bufio.NewReader(conn))
-				run := BenchmarkRun{Start: runStart, End: time.Now()}
+				results.LogRun(start)
+
 				if err != nil {
 					panic(err)
 				}
@@ -60,35 +48,15 @@ func main() {
 				if result != "PONG" {
 					panic(fmt.Sprintf("Result should have been 'PONG' was '%v'", result))
 				}
-
-				results <- run
 			}
 		}()
 	}
 
-	wg.Add(1)
-	go func() {
-		for run := range results {
-			ms := float64(run.End.Sub(run.Start).Nanoseconds()) / 1000000.0
-			if ms < 1 {
-				benchmarkResults.ResponseTimes[1] += 1
-			} else {
-				benchmarkResults.ResponseTimes[int(ms)] += 1
-			}
-		}
-		wg.Done()
-	}()
-
-	stopThroughput := benchmark.PrintThroughput(start, &counter)
-
+	stopThroughput := benchmark.PrintThroughput(results.Start, &counter)
 	benchmarkWg.Wait()
-	benchmarkResults.Elapsed = time.Since(start)
-	close(results)
-
+	results.Stop()
 	stopThroughput <- true
-	wg.Wait()
-
-	benchmark.PrintResults(benchmarkResults)
+	benchmark.PrintResults(results)
 }
 
 // $ redis-benchmark
