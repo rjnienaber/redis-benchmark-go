@@ -2,6 +2,7 @@ package benchmark
 
 import "time"
 import "sync"
+import "math"
 
 type Run struct {
 	Start time.Time
@@ -23,11 +24,7 @@ func processor(r *Results) {
 	r.WaitGroup.Add(1)
 	for run := range r.Processor {
 		ms := float64(run.End.Sub(run.Start).Nanoseconds()) / 1000000.0
-		if ms < 1 {
-			r.ResponseTimes[1] += 1
-		} else {
-			r.ResponseTimes[int(ms)] += 1
-		}
+		r.ResponseTimes[int(math.Ceil(ms))]++
 	}
 	r.WaitGroup.Done()
 }
